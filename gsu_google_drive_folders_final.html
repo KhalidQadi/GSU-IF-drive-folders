@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSU Google Drive Folders</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .folder { cursor: pointer; padding: 10px; margin: 5px; background-color: #f0f0f0; }
+        .folder:hover { background-color: #e0e0e0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin-top: 20px; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 5px; margin: 5px 0; }
+        input[type="submit"] { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>GSU Google Drive Folders</h1>
+    <div id="folderList"></div>
+    <div id="folderContent" style="display:none;">
+        <h2 id="folderName"></h2>
+        <table id="folderTable">
+            <tr>
+                <th>Document Name</th>
+                <th>Created on</th>
+                <th>GD hyperlink</th>
+            </tr>
+        </table>
+        <form id="dataForm">
+            <input type="text" id="documentName" placeholder="Document Name" required>
+            <input type="date" id="createdOn" required>
+            <input type="text" id="gdHyperlink" placeholder="GD Hyperlink" required>
+            <input type="submit" value="Add Document">
+        </form>
+    </div>
+
+    <script>
+    const folders = ["Administrative Coordinator", "Admission", "African Language", "General"];
+    let data = JSON.parse(localStorage.getItem('folderData')) || {};
+    folders.forEach(folder => {
+        if (!data[folder]) data[folder] = [];
+    });
+
+    function showFolders() {
+        const folderList = document.getElementById('folderList');
+        folders.forEach(folder => {
+            const div = document.createElement('div');
+            div.className = 'folder';
+            div.textContent = folder;
+            div.onclick = () => showFolderContent(folder);
+            folderList.appendChild(div);
+        });
+    }
+
+    function showFolderContent(folder) {
+        document.getElementById('folderName').textContent = folder;
+        const table = document.getElementById('folderTable');
+        while (table.rows.length > 1) {
+            table.deleteRow(1);
+        }
+        data[folder].forEach(item => {
+            const row = table.insertRow();
+            Object.entries(item).forEach(([key, value]) => {
+                const cell = row.insertCell();
+                if (key === 'gdHyperlink') {
+                    const link = document.createElement('a');
+                    link.href = value;
+                    link.textContent = value;
+                    link.target = '_blank';
+                    cell.appendChild(link);
+                } else {
+                    cell.textContent = value;
+                }
+            });
+        });
+        document.getElementById('folderContent').style.display = 'block';
+        document.getElementById('dataForm').onsubmit = (e) => addDocument(e, folder);
+    }
+
+    function addDocument(e, folder) {
+        e.preventDefault();
+        const newDoc = {
+            documentName: document.getElementById('documentName').value,
+            createdOn: document.getElementById('createdOn').value,
+            gdHyperlink: document.getElementById('gdHyperlink').value
+        };
+        data[folder].push(newDoc);
+        localStorage.setItem('folderData', JSON.stringify(data));
+        showFolderContent(folder);
+        document.getElementById('dataForm').reset();
+    }
+
+    showFolders();
+    </script>
+</body>
+</html>
